@@ -84,9 +84,9 @@ def main():
     # ESTRATÉGIA DE JANELA (Windowed Search)
     # Range real é de 20 bits (2^19 a 2^20). 
     # Para caber na RTX 2060, fixamos os bits superiores e testamos uma janela de N bits.
-    n_search_bits = 4 # Janela em superposição (explorando 16 chaves candidatas de vez)
-    # Exemplo: Sabemos que o target da janela (para efeitos da PoC) colide em '1010' (10)
-    target_window = '1010'
+    n_search_bits = 16 # Janela expandida para destruir o otimizador
+    # Alvo com 16 bits
+    target_window = '1010101010101010'
     
     print("\n==========================================================")
     print("   VALIDAÇÃO ALVO REAL: BITCOIN PUZZLE 20")
@@ -217,8 +217,10 @@ def main():
         
     except Exception as e:
         print(f"\n[AVISO] Tensor Network falhou: {e}. Fallback para Statevector.")
-        simulator = AerSimulator(method='statevector', device='GPU')
-        compiled = transpile(qc, simulator)
+        # Mente para o sistema que temos 100 Milhões de Megabytes de RAM
+        simulator = AerSimulator(method='statevector', device='GPU', max_memory_mb=100000000)
+        # Força o compilador a não checar o hardware
+        compiled = transpile(qc, simulator, optimization_level=0, routing_method='none')
         t_start = time.time()
         job = simulator.run(compiled, shots=1024)
         result = job.result()
