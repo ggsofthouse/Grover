@@ -30,6 +30,11 @@ fi
 
 source $HOME/miniconda/etc/profile.d/conda.sh
 
+# Aceita Termos de Serviço do Conda
+conda config --set solver classic || true
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
+
 # 3. Criação do Ambiente Quântico
 echo -e "\n[+] Criando ambiente 'quantum_env' (Python 3.10)..."
 conda create -y -n quantum_env python=3.10
