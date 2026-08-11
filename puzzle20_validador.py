@@ -84,9 +84,9 @@ def main():
     # ESTRATÉGIA DE JANELA (Windowed Search)
     # Range real é de 20 bits (2^19 a 2^20). 
     # Para caber na RTX 2060, fixamos os bits superiores e testamos uma janela de N bits.
-    n_search_bits = 10 # Teste de estresse realista para a H200 (gera 39 iterações massivas)
-    # Alvo com 10 bits
-    target_window = '1010101010'
+    n_search_bits = 8 # Teste com 8 bits (gera ~12 iterações completas)
+    # Alvo com 8 bits
+    target_window = '10101010'
     
     print("\n==========================================================")
     print("   VALIDAÇÃO ALVO REAL: BITCOIN PUZZLE 20")
