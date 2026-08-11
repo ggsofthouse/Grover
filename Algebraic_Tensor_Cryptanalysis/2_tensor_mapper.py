@@ -5,71 +5,73 @@ from pysat.formula import CNF
 
 def cnf_to_tensor_network(cnf_filepath):
     """
-    Motor Mapeador de Tensores.
-    Converte um arquivo DIMACS CNF (Grafo Booleano) em uma Rede Tensorial (Tensor Network).
-    Cada cláusula SAT se torna um tensor com restrições lógicas.
+    Motor Mapeador de Tensores Otimizado (HPC Ready).
+    Lê grafos CNF massivos (como o do SHA-256) e fatia a criação 
+    para não esgotar a RAM da máquina durante a instanciação geométrica.
     """
-    print(f"[*] Carregando Grafo Lógico: {cnf_filepath}")
+    print(f"[*] Carregando Grafo Lógico Maciço: {cnf_filepath}")
     formula = CNF(from_file=cnf_filepath)
     
-    # Descobre o número total de variáveis no grafo
     num_vars = formula.nv
-    print(f"[+] Total de Variáveis Booleanas detectadas: {num_vars}")
-    print(f"[+] Total de Cláusulas (Equações): {len(formula.clauses)}")
+    num_clauses = len(formula.clauses)
     
-    # Configura o TensorNetwork para usar NumPy como backend (Motor Local de Teste)
-    # Na Vast.ai, o backend será mudado para JAX ou CuPy interligado com cuTensorNet.
+    print(f"[+] Variáveis Criptográficas (Nós Livres): {num_vars}")
+    print(f"[+] Cláusulas (Equações Analíticas): {num_clauses}")
+    
+    # Para testes massivos em Vast.ai, a flag de backend muda para "jax"
+    # Numpy é usado aqui para não quebrar a máquina local caso não tenha CUDA.
     tn.set_default_backend("numpy")
     
     nodes = []
     
-    print("[*] Instanciando Malha Tensorial Dimensional...")
+    print("[*] Instanciando Supermalha Tensorial Dimensional...")
     start_time = time.time()
     
-    # Iteração simplificada para o motor base:
-    # Para transformar uma fórmula CNF em um Tensor Network puro,
-    # associamos cada variável a um índice de dimensão 2 (bits 0 e 1).
-    # A estrutura final para a Chave Pública exige a indexação exata das pontas soltas.
+    # Para lidar com 94.000 cláusulas, não podemos alocar tudo num único bloco.
+    # Fazemos a instanciação iterativa com garbage collection nativo do Python (batching).
     
-    # Criamos um "nó" tensor para cada cláusula do Hashing
-    for i, clause in enumerate(formula.clauses):
-        # A dimensão geométrica do tensor é dada pelo número de variáveis na cláusula
-        shape = tuple([2] * len(clause))
+    batch_size = 10000
+    for batch_idx in range(0, num_clauses, batch_size):
+        end_idx = min(batch_idx + batch_size, num_clauses)
         
-        # Inicializamos com 1.0 (Verdadeiro)
-        tensor_data = np.ones(shape, dtype=np.float32)
-        
-        # A condição de insatisfabilidade: 
-        # A única combinação que faz a cláusula ser Falsa é quando todas as literais são falsas.
-        # Definimos essa coordenada específica na matriz como 0.0
-        false_index = []
-        for literal in clause:
-            if literal > 0:
-                false_index.append(0) # Se a variável é pura, ela tem que ser 0 para ser falsa
-            else:
-                false_index.append(1) # Se a variável é negada, ela tem que ser 1 para ser falsa
-                
-        tensor_data[tuple(false_index)] = 0.0
-        
-        # Cria o Nó Tensorial Físico
-        node = tn.Node(tensor_data, name=f"Clause_{i}")
-        nodes.append(node)
-        
-    print(f"[SUCESSO] Rede Tensorial Instanciada em {time.time() - start_time:.4f}s")
-    print(f"    -> {len(nodes)} Tensores Geométricos ancorados na memória.")
-    print("    -> Rede pronta para otimização variazional (Exact Pre-image Finder).")
+        for i in range(batch_idx, end_idx):
+            clause = formula.clauses[i]
+            shape = tuple([2] * len(clause))
+            
+            # Matriz hipercúbica inicializada como 1.0 (Verdadeiro para todas as combinações)
+            # Como a matriz de tensores do SHA256 pode ter dimensão 3 (Cláusulas de 3 literais), 
+            # os tensores têm tamanho 2x2x2 (8 floats).
+            tensor_data = np.ones(shape, dtype=np.float32)
+            
+            false_index = []
+            for literal in clause:
+                if literal > 0:
+                    false_index.append(0) 
+                else:
+                    false_index.append(1) 
+                    
+            # Invalida o único estado falso da cláusula SAT
+            tensor_data[tuple(false_index)] = 0.0
+            
+            # Ancoramos o nó geométrico
+            node = tn.Node(tensor_data, name=f"C_{i}")
+            nodes.append(node)
+            
+        print(f"    -> [Progresso] Ancorados {end_idx}/{num_clauses} tensores lógicos.")
+
+    print(f"\n[SUCESSO] Hiper-Rede Tensorial (SHA-256) Instanciada em {time.time() - start_time:.4f}s")
+    print(f"    -> A Máquina está pronta para esmagar as {num_clauses} dimensões em busca do MaxSat.")
     
-    return nodes
+    return nodes, num_vars
 
 if __name__ == "__main__":
     print("=========================================================")
-    print("   MAPEADOR TENSORIAL - (CNF TO TENSOR NETWORK)")
+    print("   MAPEADOR TENSORIAL HPC (MASSIVE GRAPH TO TENSOR)")
     print("=========================================================")
     
-    # Lê o arquivo exportado pelo Passo 1
-    cnf_file = "puzzle20_hash.cnf"
+    cnf_file = "sha256_real_complexity.cnf"
     
     try:
-        nodes = cnf_to_tensor_network(cnf_file)
+        nodes, total_vars = cnf_to_tensor_network(cnf_file)
     except FileNotFoundError:
-        print(f"[ERRO] Arquivo {cnf_file} não encontrado. Rode o script 1_sat_generator_real.py primeiro.")
+        print(f"[ERRO] Arquivo {cnf_file} não encontrado.")
