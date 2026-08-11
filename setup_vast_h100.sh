@@ -13,7 +13,7 @@ nvidia-smi
 
 # 1. Atualização do Sistema
 echo -e "\n[+] Atualizando pacotes do sistema (Ubuntu)..."
-apt-get update && apt-get install -y wget bzip2 git libgl1-mesa-glx htop tmux
+apt-get update && apt-get install -y wget bzip2 git libgl1 htop tmux
 
 # 2. Instalação do Miniconda (Isolamento de Ambiente)
 if ! command -v conda &> /dev/null
