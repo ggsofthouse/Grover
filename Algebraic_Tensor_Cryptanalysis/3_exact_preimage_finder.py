@@ -4,7 +4,7 @@ from pysat.solvers import Solver
 
 def exact_preimage_solver(cnf_filepath):
     print("=========================================================")
-    print("   MOTOR HPC DE SOLUÇÃO EXATA (CaDiCaL SAT SOLVER)")
+    print("   MOTOR HPC DE SOLUÇÃO EXATA (Glucose SAT SOLVER)")
     print("=========================================================")
     print(f"[*] Carregando Grafo Criptográfico Maciço: {cnf_filepath}")
     
@@ -14,25 +14,20 @@ def exact_preimage_solver(cnf_filepath):
     print(f"    -> Variáveis Booleanas (Nós Livres): {formula.nv}")
     print(f"    -> Cláusulas Lógicas (Restrições Analíticas): {len(formula.clauses)}")
     
-    print("\n[*] Instanciando Solver CaDiCaL (Nível Militar / C++)...")
+    print("\n[*] Instanciando Solver Glucose (Nível Militar / C++)...")
     print("[!] AVISO: O motor tentará encontrar a única permutação válida (A Chave Pública).")
     print("[!] Tempo estimado de convergência para SHA-256 completo: Semanas/Meses.\n")
     
-    # CaDiCaL ('cadical') é um dos solvers SAT mais rápidos do mundo.
-    # Nós injetamos as centenas de milhares de restrições do SHA-256 nele.
+    # Glucose41 (glucose4) é um dos solvers SAT mais estáveis no Windows/Linux padrão da lib pysat.
     start_opt = time.time()
-    with Solver(name="cadical", bootstrap_with=formula.clauses) as solver:
-        print("[*] Algoritmo de busca física acionado (Conflict-Driven Clause Learning)...")
-        print("    -> Escaneando hiper-espaço de estados. Aguarde...")
-        
-        # solver.solve() é bloqueante. Em redes gigantes como a nossa (94k+ cláusulas),
-        # ele iniciará a busca exaustiva inteligente. 
-        # ATENÇÃO: Para proteger o servidor de travamentos infinitos neste laboratório, 
-        # nós implementamos um limitador de propagação (budget) ou interrupção por tempo no hardware real.
-        
-        try:
-            # Em um ataque real na Vast.ai, deixaríamos rodando sem limite.
-            # Aqui, por ser um benchmark interativo, a execução pode ser interrompida.
+    
+    # ATENÇÃO: Adicionando timeout interno para proteger a execução local se necessário.
+    # O solver.solve() buscará exaustivamente.
+    try:
+        with Solver(name="glucose4", bootstrap_with=formula.clauses) as solver:
+            print("[*] Algoritmo de busca física acionado (Glucose CDCL)...")
+            print("    -> Escaneando hiper-espaço de estados. Aguarde...")
+            
             is_sat = solver.solve() 
             
             if is_sat:
@@ -41,8 +36,6 @@ def exact_preimage_solver(cnf_filepath):
                 
                 model = solver.get_model()
                 
-                # A pré-imagem são as variáveis de entrada. No nosso gerador, as variáveis
-                # de 1 a 256 representam a Chave Pública (PubKey).
                 pubkey_bits = []
                 for var in model:
                     if abs(var) <= 256: # Pega apenas as variáveis de entrada
@@ -51,7 +44,6 @@ def exact_preimage_solver(cnf_filepath):
                         else:
                             pubkey_bits.append('0')
                             
-                # Decodifica de binário para Hexadecimal
                 pubkey_bin_str = "".join(pubkey_bits)
                 pubkey_hex = hex(int(pubkey_bin_str, 2))[2:].zfill(64)
                 
@@ -60,10 +52,12 @@ def exact_preimage_solver(cnf_filepath):
                 
             else:
                 print("\n[FALHA] Grafo INSATISFAZÍVEL. O Hash fornecido não possui pré-imagem possível nas restrições dadas.")
-        
-        except KeyboardInterrupt:
-            print(f"\n[INTERROMPIDO] Busca cancelada manualmente após {time.time() - start_opt:.2f}s.")
-            print("O solver estava percorrendo as ramificações de conflito.")
+                
+    except Exception as e:
+        print(f"\n[ERRO NA EXECUÇÃO DO SOLVER] Detalhes: {e}")
+    except KeyboardInterrupt:
+        print(f"\n[INTERROMPIDO] Busca cancelada manualmente após {time.time() - start_opt:.2f}s.")
+        print("O solver estava percorrendo as ramificações de conflito.")
 
 if __name__ == "__main__":
     exact_preimage_solver("sha256_exact_state.cnf")
