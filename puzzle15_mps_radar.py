@@ -61,9 +61,10 @@ def run_puzzle15_radar():
         max_shots = counts[top_state]
         confidence = (max_shots / 512) * 100
         
-        # O top_state inclui todos os bits. Os 'quantum_bits' estão nas posições menos significativas (à direita no formato binário padrão nosso, mas à esquerda na string do Qiskit).
-        # Para simplificar, como o estado amplificado deve ser o target_A completo (devido ao difusor e oráculo):
-        top_state_integer = int(top_state, 2)
+        # O top_state é retornado com o bit menos significativo a direita no string padrão do Python, 
+        # porém dependendo da ordem de medição, o Qiskit espelha.
+        # Vamos manter a leitura crua da string pra facilitar o parse na confiança
+        top_state_integer = int(top_state.replace(" ", ""), 2)
         
         # Se o pico for muito alto, detectamos ressonância
         if confidence > 15.0:
