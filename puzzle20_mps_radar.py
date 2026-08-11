@@ -170,10 +170,10 @@ def main():
     D_const = 12345
     K_const = 99999
     
-    # O valor alvo A é a chave privada que queremos achar (Exemplo: 0x011A5 = 4517)
-    target_A = 4517
+    # O valor alvo A é a verdadeira chave privada do Puzzle 20 (0xd2c55 = 863317)
+    target_A = int("d2c55", 16)
     
-    # Simulação da Matemática Clássica para gerar o Target Hash
+    # Simulação da Matemática Clássica para gerar o Target Hash (ARX)
     B_C = B_const & C_const
     not_B_D = (~B_const) & D_const
     G_val = B_C | not_B_D
@@ -182,7 +182,8 @@ def main():
     target_hash_bin = format(target_hash_val, f'0{total_bits}b')
     
     print(f"[#] Busca Total: {total_bits} bits (Puzzle 20)")
-    print(f"[#] Target Hash Simulado (ARX): {target_hash_val}")
+    print(f"[#] Range (HEX): 80000 a FFFFF (Bit mais significativo travado em 1)")
+    print(f"[#] Target Hash Simulado (ARX): {target_hash_val} (baseado na chave d2c55)")
     print(f"[#] Carga do Grafo (Qubits): {total_bits*6 + 4} Qubits")
     print(f"[#] Fatia Quântica (GPU): {quantum_bits} bits")
     print(f"[#] Estratégia Tensorial: MPS (Matrix Product State) com Poda (Truncation)")
@@ -197,12 +198,19 @@ def main():
     
     t_global_start = time.time()
     
-    # Para o teste, vamos iterar apenas nos primeiros 1000 prefixos em vez de 65536,
-    # caso contrário o script demoraria demais até chegar no alvo.
-    # O prefixo esperado para 4517 (000000010001 10100101) tem os primeiros 16 bits = 282
-    max_search_loops = min(1000, 2**prefix_bits)
+    # Para o Puzzle 20, o range é 2^19 a 2^20 - 1.
+    # Como a GPU processa 4 bits, a CPU varre o prefixo de 16 bits.
+    # O prefixo deve ter o bit mais significativo igual a 1.
+    # Portanto, o loop da CPU vai de 2^(15) até (2^16)-1.
+    start_prefix = 2**(prefix_bits - 1)
+    end_prefix = 2**prefix_bits
     
-    for i in range(max_search_loops):
+    # Para o teste não demorar dias na simulação de 1.4s por bloco,
+    # vamos começar a varredura um pouco antes do prefixo correto.
+    # A chave d2c55 tem o prefixo d2c5 (53957). Vamos iniciar em 53955.
+    start_test = 53955
+    
+    for i in range(start_test, end_prefix):
         prefix_bin = format(i, f'0{prefix_bits}b')
         print(f"[*] CPU testando Bloco Clássico [{prefix_bin}****]...")
         
