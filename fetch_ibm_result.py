@@ -20,7 +20,7 @@ def main():
     status = job.status()
     print(f"Status atual do Job: {status}")
     
-    if status.name != "DONE":
+    if str(status).upper() not in ["DONE", "JOB_STATUS_DONE"]:
         print("\nO Job ainda não terminou de rodar no hardware físico.")
         print("Aguarde mais um pouco e tente novamente.")
         return
