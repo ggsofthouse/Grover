@@ -94,8 +94,8 @@ def main():
     # ---------------------------------------------------------
     # CONSTRUÇÃO DO CIRCUITO (Apenas 4 bits para não abusar da nuvem grátis)
     # ---------------------------------------------------------
-    n_search_bits = 2 # Reduzido para 2 bits para mitigar decoerência
-    target_window = '10'
+    n_search_bits = 3 # Testando limite de 3 bits
+    target_window = '101'
     
     x_search = QuantumRegister(n_search_bits, 'priv_key')
     ancilla_hash = QuantumRegister(1, 'ancilla_match')
@@ -121,8 +121,8 @@ def main():
     qc.add_register(cin, cout)
     
     for _ in range(iterations):
-        qc.cx(x_search[0], work_reg[0])
-        qc.cx(x_search[1], work_reg[1])
+        for idx in range(n_search_bits):
+            qc.cx(x_search[idx], work_reg[idx])
         
         qc.append(add_inst, [cin[0]] + list(x_search) + list(work_reg) + [cout[0]])
         ripemd_g_func_bitwise(qc, work_reg, reg_c, reg_d, reg_res, n_search_bits)
@@ -138,8 +138,8 @@ def main():
         ripemd_g_func_bitwise(qc, work_reg, reg_c, reg_d, reg_res, n_search_bits)
         qc.append(sub_inst, [cin[0]] + list(x_search) + list(work_reg) + [cout[0]])
         
-        qc.cx(x_search[1], work_reg[1])
-        qc.cx(x_search[0], work_reg[0])
+        for idx in reversed(range(n_search_bits)):
+            qc.cx(x_search[idx], work_reg[idx])
         
         apply_diffuser(qc, x_search)
         
