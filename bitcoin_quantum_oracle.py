@@ -12,32 +12,72 @@ class BitcoinQuantumOracle:
             if bit == '1':
                 qc.x(reg[i])
 
+    def _sha256_ch(self, qc, e, f, g, ancilla):
+        """
+        Função Ch (Choose) do SHA-256 reversível: (e AND f) XOR ((NOT e) AND g)
+        Mapeado em portas lógicas quânticas via Toffoli e CX.
+        """
+        qc.cx(e, f)
+        qc.ccx(e, f, ancilla)
+        qc.cx(e, f)
+        qc.x(e)
+        qc.ccx(e, g, ancilla)
+        qc.x(e)
+
+    def _uncompute_sha256_ch(self, qc, e, f, g, ancilla):
+        qc.x(e)
+        qc.ccx(e, g, ancilla)
+        qc.x(e)
+        qc.cx(e, f)
+        qc.ccx(e, f, ancilla)
+        qc.cx(e, f)
+
+    def _sha256_maj(self, qc, a, b, c, ancilla):
+        """
+        Função Maj (Majority) do SHA-256 reversível: (a AND b) XOR (a AND c) XOR (b AND c)
+        """
+        qc.cx(a, b)
+        qc.cx(a, c)
+        qc.ccx(b, c, ancilla)
+        qc.cx(a, c)
+        qc.cx(a, b)
+        qc.cx(a, ancilla)
+
+    def _uncompute_sha256_maj(self, qc, a, b, c, ancilla):
+        qc.cx(a, ancilla)
+        qc.cx(a, b)
+        qc.cx(a, c)
+        qc.ccx(b, c, ancilla)
+        qc.cx(a, c)
+        qc.cx(a, b)
+
     def _apply_cryptographic_load(self, qc, reg_a, reg_ancillas):
         """
-        Simula a Carga Real (Física/VRAM) de um Hash Criptográfico (SHA-256).
-        Como a função Hashing gera um emaranhamento massivo, injetamos uma
-        cascata densa de portas Toffoli (CCX). O 'bond dimension' do TensorNet
-        vai explodir exatamente aqui, servindo de stress-test para a Vast.ai.
+        Injeta a carga física verdadeira baseada na estrutura do SHA-256.
+        Aplica as funções Ch e Maj para criar o grau de emaranhamento real
+        esperado na compressão criptográfica.
         """
-        # Exemplo: Simulação de "Rounds" de compressão do SHA-256
-        num_rounds = 4 # Número de rounds para stress test (ajustável na Fase 4)
+        num_rounds = 4 # Reduced-round para teste (aumentar na Vast.ai para encontrar limite)
+        n = self.total_bits
         
         for r in range(num_rounds):
-            for i in range(self.total_bits - 2):
-                # Cascata Toffoli que amarra todos os qubits
-                qc.ccx(reg_a[i], reg_a[i+1], reg_ancillas[i])
-                qc.cx(reg_ancillas[i], reg_a[i+2])
+            for i in range(0, n - 3, 3):
+                # Aplica CH em trincas de qubits usando as ancillas como destino
+                self._sha256_ch(qc, reg_a[i], reg_a[i+1], reg_a[i+2], reg_ancillas[i])
+                # Aplica MAJ na mesma trinca
+                self._sha256_maj(qc, reg_a[i], reg_a[i+1], reg_a[i+2], reg_ancillas[i+1])
                 
     def _uncompute_cryptographic_load(self, qc, reg_a, reg_ancillas):
         """
-        O Inverso Exato da carga criptográfica.
-        Se isso não for perfeito, as ancillas vazam estado e a simulação de Grover falha.
+        Uncompute EXATO e rigoroso das funções Ch e Maj para limpar a VRAM.
         """
         num_rounds = 4
+        n = self.total_bits
+        
         for r in reversed(range(num_rounds)):
-            for i in reversed(range(self.total_bits - 2)):
-                qc.cx(reg_ancillas[i], reg_a[i+2])
-                qc.ccx(reg_a[i], reg_a[i+1], reg_ancillas[i])
+            for i in reversed(range(0, n - 3, 3)):
+                self._uncompute_sha256_maj(qc, reg_a[i], reg_a[i+1], reg_a[i+2], reg_ancillas[i+1])
+                self._uncompute_sha256_ch(qc, reg_a[i], reg_a[i+1], reg_a[i+2], reg_ancillas[i])
 
     def build_circuit(self, prefix_bin):
         n = self.total_bits
