@@ -84,9 +84,9 @@ def main():
     # ESTRATÉGIA DE JANELA (Windowed Search)
     # Range real é de 20 bits (2^19 a 2^20). 
     # Para caber na RTX 2060, fixamos os bits superiores e testamos uma janela de N bits.
-    n_search_bits = 6 # Teste basal sem blocking para H200 (gera 6 iterações)
-    # Alvo com 6 bits
-    target_window = '101010'
+    n_search_bits = 4 # Teste baseline garantido (funcionou na RTX 2060)
+    # Alvo com 4 bits
+    target_window = '1010'
     
     print("\n==========================================================")
     print("   VALIDAÇÃO ALVO REAL: BITCOIN PUZZLE 20")
@@ -198,11 +198,15 @@ def main():
     qc.measure(x_search, meas)
     
     print("\n[!] Pipeline Criptográfico Montado.")
-    print("Iniciando AerSimulator com cuTensorNet Otimizado (Native Slicing)...")
+    print("Iniciando AerSimulator com cuTensorNet Otimizado (blocking_enable=True)...")
     
-    # Limitado em 141GB (H200 NVL) para forçar slicing em vez de um OOM kernel panic
-    # REMOVIDO: blocking_enable=True pois causa Internal Error no cuTensorNet para grafos massivos
-    simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=141000)
+    # Sem limite de memória rígido (alocação dinâmica do Qiskit)
+    simulator = AerSimulator(method='tensor_network', device='GPU')
+    # Restaura o blocking que funde as portas para reduzir o grafo
+    simulator.set_options(
+        blocking_enable=True,
+        blocking_qubits=15
+    )
     # Transpila passando apenas os basis_gates para evitar o limite de qubits e forçar o unroll do Cuccaro_ADD
     compiled = transpile(qc, basis_gates=simulator.operation_names)
     
