@@ -28,7 +28,7 @@ else
     echo -e "\n[+] Conda já instalado. Pulando..."
 fi
 
-source $HOME/miniconda/etc/profile.d/conda.sh
+eval "$(conda shell.bash hook)"
 
 # Aceita Termos de Serviço do Conda (Fallback)
 conda config --set solver classic || true
