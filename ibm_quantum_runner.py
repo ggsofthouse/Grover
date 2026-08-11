@@ -94,8 +94,8 @@ def main():
     # ---------------------------------------------------------
     # CONSTRUÇÃO DO CIRCUITO (Apenas 4 bits para não abusar da nuvem grátis)
     # ---------------------------------------------------------
-    n_search_bits = 3 # Testando limite de 3 bits
-    target_window = '101'
+    n_search_bits = 1 # Reduzido ao máximo: 1 bit (0 ou 1)
+    target_window = '1'
     
     x_search = QuantumRegister(n_search_bits, 'priv_key')
     ancilla_hash = QuantumRegister(1, 'ancilla_match')
