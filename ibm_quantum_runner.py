@@ -123,7 +123,6 @@ def main():
     for _ in range(iterations):
         qc.cx(x_search[0], work_reg[0])
         qc.cx(x_search[1], work_reg[1])
-        qc.ccx(x_search[0], x_search[1], work_reg[2])
         
         qc.append(add_inst, [cin[0]] + list(x_search) + list(work_reg) + [cout[0]])
         ripemd_g_func_bitwise(qc, work_reg, reg_c, reg_d, reg_res, n_search_bits)
@@ -139,7 +138,6 @@ def main():
         ripemd_g_func_bitwise(qc, work_reg, reg_c, reg_d, reg_res, n_search_bits)
         qc.append(sub_inst, [cin[0]] + list(x_search) + list(work_reg) + [cout[0]])
         
-        qc.ccx(x_search[0], x_search[1], work_reg[2])
         qc.cx(x_search[1], work_reg[1])
         qc.cx(x_search[0], work_reg[0])
         
