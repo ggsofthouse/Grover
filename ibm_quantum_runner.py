@@ -10,6 +10,7 @@ import os
 import getpass
 from qiskit import QuantumCircuit, QuantumRegister, ClassicalRegister, transpile
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
+from qiskit_ibm_runtime.options import SamplerOptions
 
 # =====================================================================
 # BLOCOS LÓGICOS REVERSÍVEIS (LEGO QUÂNTICO)
@@ -93,8 +94,8 @@ def main():
     # ---------------------------------------------------------
     # CONSTRUÇÃO DO CIRCUITO (Apenas 4 bits para não abusar da nuvem grátis)
     # ---------------------------------------------------------
-    n_search_bits = 4 
-    target_window = '1010'
+    n_search_bits = 2 # Reduzido para 2 bits para mitigar decoerência
+    target_window = '10'
     
     x_search = QuantumRegister(n_search_bits, 'priv_key')
     ancilla_hash = QuantumRegister(1, 'ancilla_match')
@@ -156,8 +157,14 @@ def main():
     if depth > 100:
         print("    [AVISO] Profundidade extrema. O ruído quântico (decoerência) dominará o resultado.")
         
-    print("\n[+] Enviando Job para a nuvem da IBM...")
-    sampler = Sampler(mode=backend)
+    print("\n[+] Configurando Escudos de Mitigação de Erro (DD e Twirling)...")
+    options = SamplerOptions()
+    options.dynamical_decoupling.enable = True
+    options.dynamical_decoupling.sequence_type = "XX"
+    options.twirling.enable_gates = True
+
+    print("\n[+] Enviando Job Blindado para a nuvem da IBM...")
+    sampler = Sampler(mode=backend, options=options)
     
     # Submissão (Usando o padrão V2 do Qiskit Runtime)
     job = sampler.run([transpiled_circuit], shots=1024)
