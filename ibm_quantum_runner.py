@@ -19,10 +19,10 @@ from qiskit_ibm_runtime.options import SamplerOptions
 def maj(qc, c, a, b):
     qc.cx(a, b)
     qc.cx(a, c)
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
 
 def uma(qc, c, a, b):
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
     qc.cx(a, c)
     qc.cx(c, b)
 
@@ -47,9 +47,9 @@ def build_cuccaro_adder(n):
 
 def ripemd_g_func_bitwise(qc, reg_b, reg_c, reg_d, reg_res, n):
     for i in range(n):
-        qc.ccx(reg_b[i], reg_c[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_c[i], reg_res[i])
         qc.x(reg_b[i])
-        qc.ccx(reg_b[i], reg_d[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_d[i], reg_res[i])
         qc.x(reg_b[i])
 
 def apply_diffuser(qc, search_reg):

@@ -13,10 +13,10 @@ from qiskit_aer import AerSimulator
 def maj(qc, c, a, b):
     qc.cx(a, b)
     qc.cx(a, c)
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
 
 def uma(qc, c, a, b):
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
     qc.cx(a, c)
     qc.cx(c, b)
 
@@ -44,9 +44,9 @@ def ripemd_g_func_bitwise(qc, reg_b, reg_c, reg_d, reg_res, n):
     Função G(B,C,D) do RIPEMD-160
     """
     for i in range(n):
-        qc.ccx(reg_b[i], reg_c[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_c[i], reg_res[i])
         qc.x(reg_b[i])
-        qc.ccx(reg_b[i], reg_d[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_d[i], reg_res[i])
         qc.x(reg_b[i])
 
 def uncompute_ripemd_g_func_bitwise(qc, reg_b, reg_c, reg_d, reg_res, n):
@@ -55,9 +55,9 @@ def uncompute_ripemd_g_func_bitwise(qc, reg_b, reg_c, reg_d, reg_res, n):
     """
     for i in range(n):
         qc.x(reg_b[i])
-        qc.ccx(reg_b[i], reg_d[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_d[i], reg_res[i])
         qc.x(reg_b[i])
-        qc.ccx(reg_b[i], reg_c[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_c[i], reg_res[i])
 
 def apply_diffuser(qc, search_reg):
     """ Difusor de Grover para reflexão sobre a média """

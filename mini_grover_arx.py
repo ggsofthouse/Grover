@@ -13,10 +13,10 @@ from qiskit_aer import AerSimulator
 def maj(qc, c, a, b):
     qc.cx(a, b)
     qc.cx(a, c)
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
 
 def uma(qc, c, a, b):
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
     qc.cx(a, c)
     qc.cx(c, b)
 

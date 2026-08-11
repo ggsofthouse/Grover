@@ -23,10 +23,10 @@ from qiskit_aer import AerSimulator
 def maj(qc, c, a, b):
     qc.cx(a, b)
     qc.cx(a, c)
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
 
 def uma(qc, c, a, b):
-    qc.ccx(b, c, a)
+    qc.rccx(b, c, a)
     qc.cx(a, c)
     qc.cx(c, b)
 
@@ -53,9 +53,9 @@ def build_cuccaro_adder(n):
 def ripemd_g_func_bitwise(qc, reg_b, reg_c, reg_d, reg_res, n):
     """ Função não linear G do RIPEMD-160 otimizada: (X & Y) ^ (~X & Z) """
     for i in range(n):
-        qc.ccx(reg_b[i], reg_c[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_c[i], reg_res[i])
         qc.x(reg_b[i])
-        qc.ccx(reg_b[i], reg_d[i], reg_res[i])
+        qc.rccx(reg_b[i], reg_d[i], reg_res[i])
         qc.x(reg_b[i])
 
 def apply_diffuser(qc, search_reg):
@@ -201,13 +201,15 @@ def main():
     print("Iniciando AerSimulator com cuTensorNet Otimizado (blocking_enable=True)...")
     
     try:
-        simulator = AerSimulator(method='tensor_network', device='GPU')
+        # Adicionado max_memory_mb infinito para enganar o limite de 29 qubits do transpiler do Qiskit
+        simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=100000000)
         # Aplica a mesma flag de otimização que nos permitiu quebrar o "Muro dos 156s"
         simulator.set_options(
             blocking_enable=True,
             blocking_qubits=15
         )
-        compiled = transpile(qc, simulator)
+        # Transpila passando apenas os basis_gates para evitar o limite de qubits e forçar o unroll do Cuccaro_ADD
+        compiled = transpile(qc, basis_gates=simulator.operation_names)
         
         t_start = time.time()
         job = simulator.run(compiled, shots=1024)
@@ -220,7 +222,7 @@ def main():
         # Mente para o sistema que temos 100 Milhões de Megabytes de RAM
         simulator = AerSimulator(method='statevector', device='GPU', max_memory_mb=100000000)
         # Força o compilador a não checar o hardware
-        compiled = transpile(qc, simulator, optimization_level=0, routing_method='none')
+        compiled = transpile(qc, basis_gates=simulator.operation_names, optimization_level=0)
         t_start = time.time()
         job = simulator.run(compiled, shots=1024)
         result = job.result()

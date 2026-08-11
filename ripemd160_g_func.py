@@ -16,14 +16,14 @@ def ripemd_g_func(qc, x, y, z, res):
     Os registradores originais x, y, z são rigorosamente preservados.
     """
     # 1. Acumula (x AND y) na Ancilla
-    qc.ccx(x, y, res)
+    qc.rccx(x, y, res)
     
     # 2. Inverte x temporariamente para computar ~x
     qc.x(x)
     
     # 3. Acumula (~x AND z) na Ancilla via XOR
     # A operação XOR é válida matematicamente pois (x & y) e (~x & z) são mutuamente exclusivos.
-    qc.ccx(x, z, res)
+    qc.rccx(x, z, res)
     
     # 4. Restaura x ao seu estado original (Uncompute local)
     qc.x(x)
