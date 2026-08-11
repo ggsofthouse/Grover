@@ -84,9 +84,9 @@ def main():
     # ESTRATÉGIA DE JANELA (Windowed Search)
     # Range real é de 20 bits (2^19 a 2^20). 
     # Para caber na RTX 2060, fixamos os bits superiores e testamos uma janela de N bits.
-    n_search_bits = 16 # Janela expandida para destruir o otimizador
-    # Alvo com 16 bits
-    target_window = '1010101010101010'
+    n_search_bits = 10 # Teste de estresse realista para a H200 (gera 39 iterações massivas)
+    # Alvo com 10 bits
+    target_window = '1010101010'
     
     print("\n==========================================================")
     print("   VALIDAÇÃO ALVO REAL: BITCOIN PUZZLE 20")
@@ -201,8 +201,8 @@ def main():
     print("Iniciando AerSimulator com cuTensorNet Otimizado (blocking_enable=True)...")
     
     try:
-        # Adicionado max_memory_mb infinito para enganar o limite de 29 qubits do transpiler do Qiskit
-        simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=100000000)
+        # Limitado em 141GB (H200 NVL) para forçar slicing em vez de um OOM kernel panic
+        simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=141000)
         # Aplica a mesma flag de otimização que nos permitiu quebrar o "Muro dos 156s"
         simulator.set_options(
             blocking_enable=True,
