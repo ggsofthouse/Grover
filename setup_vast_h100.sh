@@ -41,7 +41,7 @@ conda activate quantum_env
 # 4. Instalação do NVIDIA cuQuantum (O Coração da Rede Tensorial)
 echo -e "\n[+] Instalando SDK cuQuantum (Backend para Tensor Networks)..."
 # É crucial amarrar na versão do CUDA da imagem da Vast.ai (assumindo CUDA 12)
-pip install cuquantum-python-cu12
+pip install cuquantum-python-cu12==23.10.0
 
 # 5. Instalação do Qiskit e Aer Simulator GPU
 echo -e "\n[+] Instalando Qiskit e Aer Simulator com suporte a GPU..."
