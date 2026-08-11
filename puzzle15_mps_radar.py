@@ -48,8 +48,9 @@ def run_puzzle15_radar():
         
         qc.measure_all()
         
-        # O transpile já ocorre nativamente no run() com shots pequenos
-        job = simulator.run(qc, shots=512)
+        from qiskit import transpile
+        compiled = transpile(qc, backend=simulator)
+        job = simulator.run(compiled, shots=512)
         result = job.result()
         counts = result.get_counts()
         
