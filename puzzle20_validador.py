@@ -200,34 +200,25 @@ def main():
     print("\n[!] Pipeline Criptográfico Montado.")
     print("Iniciando AerSimulator com cuTensorNet Otimizado (blocking_enable=True)...")
     
-    try:
-        # Limitado em 141GB (H200 NVL) para forçar slicing em vez de um OOM kernel panic
-        simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=141000)
-        # Aplica a mesma flag de otimização que nos permitiu quebrar o "Muro dos 156s"
-        simulator.set_options(
-            blocking_enable=True,
-            blocking_qubits=15
-        )
-        # Transpila passando apenas os basis_gates para evitar o limite de qubits e forçar o unroll do Cuccaro_ADD
-        compiled = transpile(qc, basis_gates=simulator.operation_names)
+    # Limitado em 141GB (H200 NVL) para forçar slicing em vez de um OOM kernel panic
+    simulator = AerSimulator(method='tensor_network', device='GPU', max_memory_mb=141000)
+    # Aplica a mesma flag de otimização que nos permitiu quebrar o "Muro dos 156s"
+    simulator.set_options(
+        blocking_enable=True,
+        blocking_qubits=15
+    )
+    # Transpila passando apenas os basis_gates para evitar o limite de qubits e forçar o unroll do Cuccaro_ADD
+    compiled = transpile(qc, basis_gates=simulator.operation_names)
+    
+    t_start = time.time()
+    job = simulator.run(compiled, shots=1024)
+    result = job.result()
+    
+    if not result.success:
+        raise Exception(result.status)
         
-        t_start = time.time()
-        job = simulator.run(compiled, shots=1024)
-        result = job.result()
-        counts = result.get_counts()
-        t_end = time.time()
-        
-    except Exception as e:
-        print(f"\n[AVISO] Tensor Network falhou: {e}. Fallback para Statevector.")
-        # Mente para o sistema que temos 100 Milhões de Megabytes de RAM
-        simulator = AerSimulator(method='statevector', device='GPU', max_memory_mb=100000000)
-        # Força o compilador a não checar o hardware
-        compiled = transpile(qc, basis_gates=simulator.operation_names, optimization_level=0)
-        t_start = time.time()
-        job = simulator.run(compiled, shots=1024)
-        result = job.result()
-        counts = result.get_counts()
-        t_end = time.time()
+    counts = result.get_counts()
+    t_end = time.time()
     
     print(f"\nTempo de Execução (GPU): {t_end - t_start:.4f}s")
     
