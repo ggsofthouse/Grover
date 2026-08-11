@@ -38,3 +38,15 @@ Força bruta em escala governamental. Reativamos a configuração `CUTENSORNET_C
 1. **Validar Fronteira de Slicing:** Achar o limite exato de bits em 1x A100 (Teste atual: 6 a 10 bits).
 2. **Implementar MPS/PEPS (Poda):** Modificar `puzzle20_validador.py` injetando tolerância a perdas (max bond dimension) para esticar a janela.
 3. **Loop Híbrido:** Escrever o invólucro em Python que itera bits clássicos enquanto invoca o núcleo TensorNetwork apenas para os bits inferiores.
+
+## 4. Regras e Conclusões da Sessão (Hardware & Limites)
+
+- **A Morte no WSL:** Computação clássica sem VRAM morre no *Path Finding* com `INTERNAL_ERROR` a partir de 6 bits (Iterações de Grover dobram a complexidade).
+- **O Gargalo Multi-GPU:** O uso de 2x A100 (ou mais) conectadas via NVLink exige instalação nativa de OpenMPI (`openmpi-bin libopenmpi-dev`) a nível de SO, e o `mpirun` não tem suporte 100% nativo (Pode exigir reescrita em cuQuantum C++ para estabilidade de comunicação NCCL).
+- **A Rainha do Grover (H200 NVL):** A máquina com 1x H200 (141 GB VRAM) provou ser o setup definitivo para simulação solitária. O grande volume de VRAM maciça anula o gargalo de *Slicing* do processador (CPU), permitindo a quebra de maiores ranges quase instantaneamente, operando em ~48.3 TFLOPS no modo de precisão dupla (FP64).
+- **Configuração Obrigatória na Vast.ai:** Sempre rodar `unset CUTENSORNET_COMMUNICATOR_CONFIG` antes de qualquer execução se for usar 1 única placa, caso contrário o driver tentará forçar MPI na ponte PCI-E e causar *Crash*.
+
+## 5. Próxima Sessão (Handover)
+
+- **Objetivo Principal:** Avaliar se a A100 ou a H200 retornaram o Hash no terminal (ou se deram OOM).
+- **Ação:** Com base no resultado do limite de VRAM de 6 bits (se explodiu os 141 GB da H200 ou não), iniciaremos a implementação do **Loop Híbrido** (Item 3.3 e 4), criando um *wrapper* para iterar na CPU a janela superior e invocar a VRAM apenas para a janela de quebra inferior.
