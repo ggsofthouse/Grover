@@ -45,7 +45,7 @@ pip install cuquantum-python-cu12
 
 # 5. Instalação do Qiskit e Aer Simulator GPU
 echo -e "\n[+] Instalando Qiskit e Aer Simulator com suporte a GPU..."
-pip install qiskit qiskit-aer-gpu
+pip install qiskit==1.2.4 qiskit-aer-gpu==0.15.1
 
 # 6. Pacotes Auxiliares
 echo -e "\n[+] Instalando bibliotecas de manipulação de dados e tensores..."
