@@ -170,9 +170,9 @@ def main():
     D_const = 12345
     K_const = 99999
     
-    # O valor alvo A é a verdadeira chave privada do Puzzle 21 (usando um mock real dentro do range 100000:1fffff)
-    # Exemplo: 0x18A9E5 (1616357)
-    target_A = int("18a9e5", 16)
+    # O valor alvo A é a verdadeira chave privada do Puzzle 21 Histórico!
+    # Chave verdadeira do Puzzle 21: 0x1ba534
+    target_A = int("1ba534", 16)
     
     # Simulação da Matemática Clássica para gerar o Target Hash (ARX)
     B_C = B_const & C_const
@@ -184,7 +184,7 @@ def main():
     
     print(f"[#] Busca Total: {total_bits} bits (Puzzle 21)")
     print(f"[#] Range (HEX): 100000 a 1FFFFF (Bit mais significativo travado em 1)")
-    print(f"[#] Target Hash Simulado (ARX): {target_hash_val} (baseado na chave 18a9e5)")
+    print(f"[#] Target Hash Simulado (ARX): {target_hash_val} (baseado na chave 1ba534)")
     print(f"[#] Carga do Grafo (Qubits): {total_bits*6 + 4} Qubits")
     print(f"[#] Fatia Quântica (GPU): {quantum_bits} bits")
     print(f"[#] Estratégia Tensorial: MPS (Matrix Product State) com Poda (Truncation)")
@@ -208,8 +208,8 @@ def main():
     
     # Para o teste não demorar dias na simulação de 1.4s por bloco,
     # vamos começar a varredura um pouco antes do prefixo correto.
-    # A chave 18a9e5 tem o prefixo 18a9e (101022). Vamos iniciar em 101020.
-    start_test = 101020
+    # A chave 1ba534 tem o prefixo 1ba53 (113235). Vamos iniciar em 113230.
+    start_test = 113230
     
     for i in range(start_test, end_prefix):
         prefix_bin = format(i, f'0{prefix_bits}b')
