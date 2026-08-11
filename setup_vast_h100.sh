@@ -30,14 +30,12 @@ fi
 
 source $HOME/miniconda/etc/profile.d/conda.sh
 
-# Aceita Termos de Serviço do Conda
+# Aceita Termos de Serviço do Conda (Fallback)
 conda config --set solver classic || true
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main || true
-conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r || true
 
-# 3. Criação do Ambiente Quântico
+# 3. Criação do Ambiente Quântico via conda-forge (Bypass no TOS)
 echo -e "\n[+] Criando ambiente 'quantum_env' (Python 3.10)..."
-conda create -y -n quantum_env python=3.10
+conda create -y -n quantum_env -c conda-forge python=3.10
 conda activate quantum_env
 
 # 4. Instalação do NVIDIA cuQuantum (O Coração da Rede Tensorial)
