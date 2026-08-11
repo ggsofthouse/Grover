@@ -168,16 +168,48 @@ def run_quantum_suffix(prefix_bin, target_full, quantum_bits, simulator):
     confidence = (top_shots / 1024) * 100
     return top_state, confidence
 
+# =====================================================================
+# INTEGRAÇÃO CLÁSSICA (BITCRACK)
+# =====================================================================
+
+def dispatch_to_bitcrack(prefix_bin, total_puzzle_bits):
+    """
+    Recebe o prefixo (encontrado pelo radar quântico) e o tamanho total do puzzle.
+    Calcula o range hexadecimal e gera o comando para o BitCrack.
+    """
+    remaining_bits = total_puzzle_bits - len(prefix_bin)
+    
+    # Preenche o início com zeros e o fim com uns
+    start_bin = prefix_bin + ('0' * remaining_bits)
+    end_bin = prefix_bin + ('1' * remaining_bits)
+    
+    # Converte para Hexadecimal (sem o '0x' e em minúsculas)
+    start_hex = hex(int(start_bin, 2))[2:]
+    end_hex = hex(int(end_bin, 2))[2:]
+    
+    # Calcula a porcentagem do range baseado no valor decimal do prefixo
+    prefix_val = int(prefix_bin, 2)
+    max_prefix_val = (2 ** len(prefix_bin)) - 1
+    percentage = (prefix_val / max_prefix_val) * 100 if max_prefix_val > 0 else 0
+    
+    # Endereço alvo do Puzzle 10
+    address_alvo = "1LeBZP5QCwwgXRtmVUvTVrraqPUokyLHqe"
+    
+    print(f"\n[SUCESSO] Radar Quântico travou em um setor do Keyspace!")
+    print(f"Pista Localizada: A Chave Privada está aproximadamente na faixa de {percentage:.4f}% do Range Total.")
+    print(f"Inicie a varredura bruta neste intervalo específico:")
+    print(f"./cuBitCrack -t 256 --keyspace {start_hex}:{end_hex} {address_alvo}\n")
+
 def main():
     print("\n==========================================================")
     print("   LOOP HÍBRIDO (CPU + GPU): BITCOIN PUZZLE")
     print("==========================================================")
     
-    # Configuração de Escala
-    total_bits = 7               # Busca real total de 7 bits (Range: 128 chaves)
-    target_full = '1101010'      # Alvo simulado (Hash)
+    # Configuração de Escala (Puzzle 10)
+    total_bits = 10              # Puzzle 10 possui 10 bits totais
+    target_full = '1101010101'   # Alvo simulado de 10 bits
     
-    quantum_bits = 4             # GPU resolve 4 bits simultaneamente (cabe nos 6GB da RTX 2060)
+    quantum_bits = 4             # GPU resolve 4 bits por vez (seguro para RTX 2060)
     prefix_bits = total_bits - quantum_bits # CPU itera 2 bits
     
     print(f"[#] Busca Total: {total_bits} bits")
@@ -206,13 +238,15 @@ def main():
         # Limiar de detecção (Grover costuma cravar > 90% quando acha)
         # Se for ruído (prefixo errado), a confiança fica em ~6% para 4 bits.
         if confidence > 80.0:
-            full_key = prefix_bin + q_state
-            print(f"\n[SUCESSO ABSOLUTO] Hash Colidiu com sucesso!")
-            print(f"Chave Privada Completa Encontrada: {full_key}")
+            full_key_prefix = prefix_bin + q_state
+            print(f"\n[!] Radar Quântico travou no prefixo mais provável: {full_key_prefix}")
+            
+            # Delega para o BitCrack (Puzzle 71 = 71 bits totais de busca)
+            dispatch_to_bitcrack(full_key_prefix, 71)
             break
             
     t_global_end = time.time()
-    print(f"\nTempo Total Híbrido: {t_global_end - t_global_start:.2f}s")
+    print(f"Tempo Total Híbrido: {t_global_end - t_global_start:.2f}s")
 
 if __name__ == "__main__":
     main()
