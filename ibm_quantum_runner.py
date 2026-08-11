@@ -157,7 +157,7 @@ def main():
         print("    [AVISO] Profundidade extrema. O ruído quântico (decoerência) dominará o resultado.")
         
     print("\n[+] Enviando Job para a nuvem da IBM...")
-    sampler = Sampler(backend=backend)
+    sampler = Sampler(mode=backend)
     
     # Submissão (Usando o padrão V2 do Qiskit Runtime)
     job = sampler.run([transpiled_circuit], shots=1024)
